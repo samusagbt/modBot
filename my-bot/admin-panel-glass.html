@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Order Management - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #32b8c6;
+            --primary-hover: #2da6b3;
+            --bg-dark: #1a1a2e;
+            --bg-darker: #16213e;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --bg-card-hover: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        html {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+            color: var(--text-primary);
+        }
+
+        body {
+            background: inherit;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(22, 33, 62, 0.8);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+        }
+
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .order-item {
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .order-item:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .order-item.active {
+            background: rgba(50, 184, 198, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(50, 184, 198, 0.2);
+        }
+
+        .order-item-header {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .order-item-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary) 0%, #32d4e6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(50, 184, 198, 0.1) 0%, rgba(50, 184, 198, 0.05) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(50, 184, 198, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Order Details */
+        .order-details {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            min-height: 500px;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .order-id {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-badge.replied {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-badge.completed {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .user-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .info-item {
+            background: var(--bg-card);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .message-box {
+            background: var(--bg-card);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .chat-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .message:last-child {
+            border-bottom: none;
+        }
+
+        .message.user {
+            background: rgba(50, 184, 198, 0.1);
+            text-align: left;
+        }
+
+        .message.admin {
+            background: rgba(16, 185, 129, 0.1);
+            text-align: left;
+        }
+
+        .message-sender {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .message.admin .message-sender {
+            color: var(--success);
+        }
+
+        .message-time {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group textarea {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13px;
+            resize: none;
+            min-height: 80px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(50, 184, 198, 0.1);
+        }
+
+        .button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #32d4e6 100%);
+            color: var(--bg-dark);
+        }
+
+        .button-primary:hover {
+            background: linear-gradient(135deg, var(--primary-hover) 0%, #2cc4d4 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(50, 184, 198, 0.3);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-select {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .status-select option {
+            background: var(--bg-darker);
+            color: var(--text-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 15px;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .order-details {
+                padding: 20px;
+            }
+
+            .user-info {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">🤖 Orders</div>
+        <div class="orders-list" id="ordersList">
+            <div class="loading">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1 class="header-title">📊 Order Management</h1>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalOrders">0</div>
+                <div class="stat-label">Total Orders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingOrders">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="repliedOrders">0</div>
+                <div class="stat-label">Replied</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completedOrders">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+
+        <div class="order-details" id="orderDetails">
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <div class="empty-state-text">No order selected</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">Select an order from the list to view details</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let orders = [];
+        let selectedOrder = null;
+
+        // Fetch orders
+        async function loadOrders() {
+            try {
+                const response = await fetch('/api/orders');
+                orders = await response.json();
+                renderOrdersList();
+                updateStats();
+            } catch (err) {
+                console.error('Error loading orders:', err);
+            }
+        }
+
+        // Render orders list
+        function renderOrdersList() {
+            const ordersList = document.getElementById('ordersList');
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<div class="loading">No orders yet</div>';
+                return;
+            }
+
+            ordersList.innerHTML = orders.map(order => `
+                <div class="order-item ${selectedOrder?._id === order._id ? 'active' : ''}" onclick="selectOrder('${order._id}')">
+                    <div class="order-item-header">#${String(order._id).slice(-8)}</div>
+                    <div class="order-item-meta">
+                        Status: ${order.status}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Select order
+        async function selectOrder(orderId) {
+            try {
+                const response = await fetch(`/api/orders/${orderId}`);
+                const data = await response.json();
+                selectedOrder = data.order;
+                const chat = data.chat;
+                renderOrderDetails(selectedOrder, chat);
+            } catch (err) {
+                console.error('Error loading order:', err);
+            }
+        }
+
+        // Render order details
+        function renderOrderDetails(order, chat) {
+            const orderDetails = document.getElementById('orderDetails');
+            const user = chat ? chat.userId : 'Unknown';
+            
+            let messagesHTML = '';
+            if (chat && chat.messages) {
+                messagesHTML = chat.messages.map(msg => `
+                    <div class="message ${msg.sender}">
+                        <div class="message-sender">${msg.sender === 'user' ? 'User' : 'Admin'}</div>
+                        ${msg.content}
+                        <div class="message-time">${new Date(msg.timestamp).toLocaleString()}</div>
+                    </div>
+                `).join('');
+            }
+
+            orderDetails.innerHTML = `
+                <div class="order-header">
+                    <div>
+                        <div class="order-id">Order #${String(order._id).slice(-8)}</div>
+                    </div>
+                    <span class="status-badge ${order.status}">${order.status}</span>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📋 Order Content</div>
+                    <div class="message-box">${order.content || 'No content'}</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">💬 Chat History</div>
+                    <div class="chat-container">${messagesHTML || '<div class="empty-state" style="padding: 20px;">No messages yet</div>'}</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📝 Send Reply</div>
+                    <div class="input-group">
+                        <textarea id="replyText" placeholder="Type your reply..."></textarea>
+                        <button class="button button-primary" onclick="sendReply('${order._id}')">Send</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🔧 Update Status</div>
+                    <select class="status-select" id="statusSelect" onchange="updateStatus('${order._id}')">
+                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                        <option value="replied" ${order.status === 'replied' ? 'selected' : ''}>Replied</option>
+                        <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
+                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                    </select>
+                </div>
+            `;
+        }
+
+        // Send reply
+        async function sendReply(orderId) {
+            const replyText = document.getElementById('replyText').value;
+            if (!replyText.trim()) return;
+
+            try {
+                await fetch(`/api/orders/${orderId}/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: replyText })
+                });
+                document.getElementById('replyText').value = '';
+                selectOrder(orderId);
+            } catch (err) {
+                console.error('Error sending reply:', err);
+            }
+        }
+
+        // Update status
+        async function updateStatus(orderId) {
+            const status = document.getElementById('statusSelect').value;
+            try {
+                await fetch(`/api/orders/${orderId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                selectOrder(orderId);
+            } catch (err) {
+                console.error('Error updating status:', err);
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('totalOrders').textContent = orders.length;
+            document.getElementById('pendingOrders').textContent = orders.filter(o => o.status === 'pending').length;
+            document.getElementById('repliedOrders').textContent = orders.filter(o => o.status === 'replied').length;
+            document.getElementById('completedOrders').textContent = orders.filter(o => o.status === 'completed').length;
+        }
+
+        // Auto-refresh
+        setInterval(loadOrders, 5000);
+
+        // Initial load
+        loadOrders();
+    </script>
+</body>
+</html>
