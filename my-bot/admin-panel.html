@@ -1,0 +1,401 @@
+<!-- ============================================
+     🎛️ admin-panel.html - پنل مدیریت
+     ============================================ -->
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت ربات</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .order-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .order-item:hover {
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            transform: translateX(-5px);
+        }
+
+        .order-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .order-id {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .order-status {
+            font-size: 0.8em;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        .main-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .order-details {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        .chat-box {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: #e7f3ff;
+            margin-left: auto;
+            text-align: right;
+            border-left: 4px solid #667eea;
+        }
+
+        .message.admin {
+            background: #f0f0f0;
+            margin-right: auto;
+            border-right: 4px solid #764ba2;
+        }
+
+        .message-time {
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .reply-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        textarea {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-replied {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .chat-box {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 پنل مدیریت ربات</h1>
+            <p>مدیریت سفارشات و مکالمات کاربران</p>
+        </div>
+
+        <div class="content">
+            <!-- Sidebar - لیست سفارشات -->
+            <div class="sidebar">
+                <h3>📦 سفارشات</h3>
+                <div id="ordersList"></div>
+            </div>
+
+            <!-- Main Panel - جزئیات و چت -->
+            <div class="main-panel">
+                <div id="orderPanel">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>یک سفارش را انتخاب کنید</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let selectedOrderId = null;
+
+        // بارگذاری سفارشات
+        async function loadOrders() {
+            try {
+                const response = await fetch(`${API_URL}/orders`);
+                const orders = await response.json();
+
+                const ordersList = document.getElementById('ordersList');
+                ordersList.innerHTML = '';
+
+                if (orders.length === 0) {
+                    ordersList.innerHTML = '<p style="text-align: center; color: #999;">هیچ سفارشی وجود ندارد</p>';
+                    return;
+                }
+
+                orders.forEach(order => {
+                    const orderEl = document.createElement('div');
+                    orderEl.className = 'order-item';
+                    orderEl.innerHTML = `
+                        <div class="order-id">#${order._id}</div>
+                        <div class="order-status">
+                            <span class="status-badge status-${order.status}">
+                                ${getStatusText(order.status)}
+                            </span>
+                        </div>
+                    `;
+                    orderEl.onclick = () => loadOrderDetails(order._id);
+                    ordersList.appendChild(orderEl);
+                });
+            } catch (err) {
+                console.error('خطا در بارگذاری سفارشات:', err);
+            }
+        }
+
+        // بارگذاری جزئیات سفارش
+        async function loadOrderDetails(orderId) {
+            try {
+                const response = await fetch(`${API_URL}/orders/${orderId}`);
+                const data = await response.json();
+                const { order, chat } = data;
+
+                selectedOrderId = orderId;
+
+                let html = `
+                    <div class="order-details">
+                        <div class="detail-row">
+                            <span class="detail-label">شماره سفارش:</span>
+                            <span class="detail-value">#${order._id}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">شناسه کاربر:</span>
+                            <span class="detail-value">${order.userId}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">وضعیت:</span>
+                            <span class="detail-value">
+                                <span class="status-badge status-${order.status}">
+                                    ${getStatusText(order.status)}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">تاریخ:</span>
+                            <span class="detail-value">${new Date(order.createdAt).toLocaleString('fa-IR')}</span>
+                        </div>
+                    </div>
+
+                    <div class="chat-box">
+                        ${chat && chat.messages ? chat.messages.map(msg => `
+                            <div class="message ${msg.sender}">
+                                <div>${msg.content}</div>
+                                <div class="message-time">${new Date(msg.timestamp).toLocaleTimeString('fa-IR')}</div>
+                            </div>
+                        `).join('') : '<p style="text-align: center; color: #999;">بدون پیام</p>'}
+                    </div>
+
+                    <div class="reply-section">
+                        <textarea id="replyText" placeholder="پاسخ خود را بنویسید..."></textarea>
+                        <button onclick="sendReply()">ارسال 📤</button>
+                    </div>
+                `;
+
+                document.getElementById('orderPanel').innerHTML = html;
+            } catch (err) {
+                console.error('خطا:', err);
+            }
+        }
+
+        // ارسال پاسخ
+        async function sendReply() {
+            const message = document.getElementById('replyText').value;
+            if (!message.trim()) {
+                alert('لطفا پیام خود را بنویسید');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/orders/${selectedOrderId}/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                if (response.ok) {
+                    alert('✅ پیام ارسال شد');
+                    loadOrderDetails(selectedOrderId);
+                }
+            } catch (err) {
+                console.error('خطا:', err);
+            }
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'pending': '⏳ در انتظار',
+                'replied': '✅ پاسخ داده شده',
+                'completed': '🎉 تکمیل شده',
+                'cancelled': '❌ لغو شده'
+            };
+            return texts[status] || status;
+        }
+
+        // بارگذاری اولیه
+        loadOrders();
+        setInterval(loadOrders, 5000); // بروزرسانی هر 5 ثانیه
+    </script>
+</body>
+</html>
